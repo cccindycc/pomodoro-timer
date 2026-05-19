@@ -93,7 +93,7 @@
     /* 顶部标签 */
     .header {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 30px;
       position: relative;
       z-index: 10;
     }
@@ -143,26 +143,26 @@
 
     .timer-ring-container {
       position: relative;
-      width: 300px;
-      height: 300px;
+      width: 320px;
+      height: 320px;
     }
 
     /* 外圈装饰 */
     .ring-outer {
       position: absolute;
-      inset: -20px;
+      inset: -25px;
       border-radius: 50%;
       border: 1px solid rgba(255, 255, 255, 0.03);
       transition: all 0.4s ease;
     }
 
     .timer-container.running .ring-outer {
-      border-color: rgba(255, 85, 51, 0.1);
-      animation: ring-rotate 20s linear infinite;
+      border-color: rgba(255, 85, 51, 0.15);
+      animation: ring-rotate 30s linear infinite;
     }
 
     .timer-container.running.break .ring-outer {
-      border-color: rgba(34, 214, 138, 0.1);
+      border-color: rgba(34, 214, 138, 0.15);
     }
 
     @keyframes ring-rotate {
@@ -170,17 +170,28 @@
       to { transform: rotate(360deg); }
     }
 
-    .ring-outer::before {
-      content: '';
+    /* 刻度 */
+    .ring-ticks {
       position: absolute;
-      top: -2px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 4px;
-      height: 4px;
-      background: var(--tomato);
+      inset: -25px;
       border-radius: 50%;
-      opacity: 0.5;
+    }
+
+    .tick {
+      position: absolute;
+      width: 2px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      left: 50%;
+      top: 0;
+      transform-origin: center 160px;
+      border-radius: 1px;
+    }
+
+    .tick.major {
+      height: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      width: 3px;
     }
 
     /* 进度环 */
@@ -217,11 +228,42 @@
       text-align: center;
     }
 
+    /* 番茄装饰 */
+    .tomato-decor {
+      position: absolute;
+      top: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 16px;
+      opacity: 0.25;
+      transition: opacity 0.4s ease;
+    }
+
+    .timer-container.running .tomato-decor {
+      opacity: 0.5;
+    }
+
+    .mini-tomato {
+      width: 22px;
+      height: 22px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .mini-tomato:nth-child(2) { animation-delay: 0.5s; }
+    .mini-tomato:nth-child(3) { animation-delay: 1s; }
+    .mini-tomato:nth-child(4) { animation-delay: 1.5s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
     .time-display {
       font-family: 'Orbitron', 'SF Mono', monospace;
-      font-size: 52px;
+      font-size: 54px;
       font-weight: 700;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       line-height: 1;
       background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
       -webkit-background-clip: text;
@@ -236,19 +278,34 @@
       background-clip: text;
     }
 
+    .session-info {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
     .session-count {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-tertiary);
-      margin-top: 12px;
       letter-spacing: 1px;
+    }
+
+    .session-count .num {
+      color: var(--tomato);
+      font-weight: 600;
+    }
+
+    .timer-container.break .session-count .num {
+      color: var(--break-color);
     }
 
     /* 番茄图标 */
     .tomato-icon {
-      width: 48px;
-      height: 48px;
-      margin: 0 auto 20px;
-      opacity: 0.9;
+      width: 50px;
+      height: 50px;
+      margin: 0 auto 14px;
+      opacity: 0.95;
       transition: all 0.4s ease;
     }
 
@@ -258,7 +315,7 @@
     }
 
     .timer-container.running .tomato-icon {
-      animation: tomato-bounce 1s ease-in-out infinite;
+      animation: tomato-bounce 1.2s ease-in-out infinite;
     }
 
     .timer-container.break .tomato-icon svg ellipse {
@@ -271,14 +328,14 @@
 
     @keyframes tomato-bounce {
       0%, 100% { transform: translateY(0) scale(1); }
-      50% { transform: translateY(-3px) scale(1.02); }
+      50% { transform: translateY(-4px) scale(1.03); }
     }
 
     /* 控制按钮 */
     .controls {
       display: flex;
-      gap: 16px;
-      margin-top: 50px;
+      gap: 12px;
+      margin-top: 36px;
       position: relative;
       z-index: 10;
     }
@@ -287,7 +344,7 @@
       font-family: 'Noto Sans SC', sans-serif;
       font-size: 14px;
       font-weight: 500;
-      padding: 14px 40px;
+      padding: 13px 32px;
       border: none;
       border-radius: 50px;
       cursor: pointer;
@@ -300,7 +357,7 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 100%);
       opacity: 0;
       transition: opacity 0.3s ease;
     }
@@ -313,6 +370,7 @@
       background: linear-gradient(135deg, var(--tomato) 0%, var(--tomato-dark) 100%);
       color: white;
       box-shadow: 0 8px 32px var(--tomato-glow);
+      min-width: 110px;
     }
 
     .btn-primary:hover {
@@ -336,37 +394,262 @@
       transform: translateY(-2px);
     }
 
+    .btn-icon {
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-icon:hover {
+      background: #222228;
+      transform: translateY(-2px);
+    }
+
+    .btn-icon svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--text-secondary);
+      transition: stroke 0.3s ease;
+    }
+
+    .btn-icon:hover svg {
+      stroke: var(--text-primary);
+    }
+
     /* 周期指示器 */
     .session-counter {
       display: flex;
       gap: 12px;
-      margin-top: 40px;
+      margin-top: 32px;
       position: relative;
       z-index: 10;
     }
 
     .session-dot {
-      width: 12px;
-      height: 12px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
       background: var(--bg-card);
       border: 2px solid var(--text-tertiary);
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
     }
 
     .session-dot.completed {
       background: linear-gradient(135deg, var(--tomato) 0%, var(--tomato-dark) 100%);
       border-color: var(--tomato);
-      box-shadow: 0 0 16px var(--tomato-glow);
-      transform: scale(1.1);
+      box-shadow: 0 0 18px var(--tomato-glow);
+      transform: scale(1.15);
+    }
+
+    .session-dot.completed::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px solid var(--tomato);
+      opacity: 0.3;
+      animation: ripple 1.5s ease-out infinite;
+    }
+
+    @keyframes ripple {
+      0% { transform: scale(1); opacity: 0.3; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    /* 统计面板 */
+    .stats-panel {
+      display: flex;
+      gap: 28px;
+      margin-top: 28px;
+      padding: 14px 28px;
+      background: var(--bg-card);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      position: relative;
+      z-index: 10;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--tomato);
+    }
+
+    .stat-item.break .stat-value {
+      color: var(--break-color);
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-tertiary);
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    /* 设置面板 */
+    .settings-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+
+    .settings-btn:hover {
+      background: #222228;
+      transform: rotate(30deg);
+    }
+
+    .settings-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--text-secondary);
+    }
+
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: -320px;
+      width: 300px;
+      height: 100vh;
+      background: var(--bg-secondary);
+      border-left: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 60px 24px 24px;
+      transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 99;
+      overflow-y: auto;
+    }
+
+    .settings-panel.open {
+      right: 0;
+    }
+
+    .settings-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 98;
+    }
+
+    .settings-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .settings-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      color: var(--text-primary);
+    }
+
+    .settings-group {
+      margin-bottom: 24px;
+    }
+
+    .settings-group-title {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .setting-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .setting-value {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .setting-value input {
+      width: 60px;
+      padding: 6px 10px;
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: 'Orbitron', monospace;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .setting-value input:focus {
+      outline: none;
+      border-color: var(--tomato);
+    }
+
+    .setting-value span {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .btn-close-settings {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-close-settings:hover {
+      background: var(--bg-card);
+    }
+
+    .btn-close-settings svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--text-secondary);
     }
 
     /* 完成庆祝动画 */
     @keyframes celebrate {
       0% { transform: translate(-50%, -50%) scale(1); }
-      25% { transform: translate(-50%, -50%) scale(1.08); }
+      25% { transform: translate(-50%, -50%) scale(1.1); }
       50% { transform: translate(-50%, -50%) scale(0.95); }
-      75% { transform: translate(-50%, -50%) scale(1.03); }
+      75% { transform: translate(-50%, -50%) scale(1.05); }
       100% { transform: translate(-50%, -50%) scale(1); }
     }
 
@@ -384,10 +667,10 @@
 
     .particle {
       position: absolute;
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
-      animation: particle-float 1s ease-out forwards;
+      animation: particle-float 1.2s ease-out forwards;
     }
 
     @keyframes particle-float {
@@ -401,15 +684,33 @@
       }
     }
 
+    /* 呼吸动画 */
+    @keyframes breathe {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+    .timer-container:not(.running) .timer-ring-container {
+      animation: breathe 3s ease-in-out infinite;
+    }
+
+    /* SVG 渐变定义 */
+    .svg-defs {
+      position: absolute;
+      width: 0;
+      height: 0;
+    }
+
     /* 快捷键提示 */
     .shortcuts {
       position: fixed;
-      bottom: 24px;
+      bottom: 18px;
       font-size: 11px;
       color: var(--text-tertiary);
       letter-spacing: 0.5px;
       display: flex;
       gap: 20px;
+      opacity: 0.6;
     }
 
     .shortcut-item {
@@ -425,23 +726,6 @@
       border: 1px solid rgba(255, 255, 255, 0.06);
       font-family: inherit;
       font-size: 10px;
-    }
-
-    /* 呼吸动画 */
-    @keyframes breathe {
-      0%, 100% { opacity: 0.6; }
-      50% { opacity: 1; }
-    }
-
-    .timer-container:not(.running) .timer-ring-container {
-      animation: breathe 3s ease-in-out infinite;
-    }
-
-    /* SVG 渐变定义 */
-    .svg-defs {
-      position: absolute;
-      width: 0;
-      height: 0;
     }
   </style>
 </head>
@@ -470,6 +754,84 @@
   <!-- 粒子容器 -->
   <div class="particles" id="particles"></div>
 
+  <!-- 设置按钮 -->
+  <button class="settings-btn" id="settingsBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+    </svg>
+  </button>
+
+  <!-- 设置面板 -->
+  <div class="settings-overlay" id="settingsOverlay"></div>
+  <div class="settings-panel" id="settingsPanel">
+    <button class="btn-close-settings" id="closeSettings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="settings-title">设置</div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">时间设置</div>
+      <div class="setting-item">
+        <span class="setting-label">专注时长</span>
+        <div class="setting-value">
+          <input type="number" id="workDuration" value="25" min="1" max="60">
+          <span>分钟</span>
+        </div>
+      </div>
+      <div class="setting-item">
+        <span class="setting-label">短休息</span>
+        <div class="setting-value">
+          <input type="number" id="breakDuration" value="5" min="1" max="30">
+          <span>分钟</span>
+        </div>
+      </div>
+      <div class="setting-item">
+        <span class="setting-label">长休息</span>
+        <div class="setting-value">
+          <input type="number" id="longBreakDuration" value="15" min="1" max="60">
+          <span>分钟</span>
+        </div>
+      </div>
+      <div class="setting-item">
+        <span class="setting-label">周期数</span>
+        <div class="setting-value">
+          <input type="number" id="sessionsUntilLongBreak" value="4" min="2" max="8">
+          <span>个</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">今日目标</div>
+      <div class="setting-item">
+        <span class="setting-label">番茄数量</span>
+        <div class="setting-value">
+          <input type="number" id="dailyGoal" value="8" min="1" max="20">
+          <span>个</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">数据</div>
+      <div class="setting-item">
+        <span class="setting-label">今日完成</span>
+        <span class="setting-value" style="color: var(--tomato);" id="todayCompleted">0</span>
+      </div>
+      <div class="setting-item">
+        <span class="setting-label">累计完成</span>
+        <span class="setting-value" style="color: var(--tomato);" id="totalCompleted">0</span>
+      </div>
+      <div class="setting-item">
+        <span class="setting-label" id="resetStats" style="cursor:pointer;color:var(--text-tertiary)">清除所有数据</span>
+      </div>
+    </div>
+  </div>
+
   <!-- 顶部标签 -->
   <div class="header">
     <div class="mode-badge" id="modeBadge">
@@ -484,29 +846,53 @@
       <div class="timer-ring-container">
         <div class="ring-outer"></div>
 
-        <svg class="progress-ring" width="300" height="300" viewBox="0 0 300 300">
-          <circle class="progress-ring__bg" cx="150" cy="150" r="140"/>
-          <circle class="progress-ring__fill" id="progressRing" cx="150" cy="150" r="140"/>
+        <!-- 刻度 -->
+        <div class="ring-ticks" id="ringTicks"></div>
+
+        <svg class="progress-ring" width="320" height="320" viewBox="0 0 320 320">
+          <circle class="progress-ring__bg" cx="160" cy="160" r="148"/>
+          <circle class="progress-ring__fill" id="progressRing" cx="160" cy="160" r="148"/>
         </svg>
 
         <div class="timer-center">
+          <!-- 番茄装饰 -->
+          <div class="tomato-decor">
+            <div class="mini-tomato">
+              <svg viewBox="0 0 100 100" fill="none"><ellipse cx="50" cy="55" rx="40" ry="38" fill="#ff5533"/><path d="M50 17C50 17 44 5 50 2C56 5 50 17 50 17Z" fill="#22d68a"/></svg>
+            </div>
+            <div class="mini-tomato">
+              <svg viewBox="0 0 100 100" fill="none"><ellipse cx="50" cy="55" rx="40" ry="38" fill="#ff5533"/><path d="M50 17C50 17 44 5 50 2C56 5 50 17 50 17Z" fill="#22d68a"/></svg>
+            </div>
+            <div class="mini-tomato">
+              <svg viewBox="0 0 100 100" fill="none"><ellipse cx="50" cy="55" rx="40" ry="38" fill="#ff5533"/><path d="M50 17C50 17 44 5 50 2C56 5 50 17 50 17Z" fill="#22d68a"/></svg>
+            </div>
+            <div class="mini-tomato">
+              <svg viewBox="0 0 100 100" fill="none"><ellipse cx="50" cy="55" rx="40" ry="38" fill="#ff5533"/><path d="M50 17C50 17 44 5 50 2C56 5 50 17 50 17Z" fill="#22d68a"/></svg>
+            </div>
+          </div>
+
+          <!-- 番茄图标 -->
           <div class="tomato-icon">
             <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <ellipse cx="50" cy="56" rx="42" ry="40" fill="#ff5533"/>
-              <ellipse cx="50" cy="56" rx="42" ry="40" fill="url(#tomatoGradIcon)"/>
-              <path d="M50 16C50 16 44 4 50 1C56 4 50 16 50 16Z" fill="#22d68a"/>
-              <path d="M50 16C50 16 38 8 32 12C40 22 50 16 50 16Z" fill="#18b876"/>
-              <ellipse cx="36" cy="46" rx="10" ry="14" fill="rgba(255,255,255,0.2)"/>
+              <ellipse cx="50" cy="55" rx="42" ry="40" fill="#ff5533"/>
+              <ellipse cx="50" cy="55" rx="42" ry="40" fill="url(#tomatoGradIcon)"/>
+              <path d="M50 15C50 15 44 3 50 0C56 3 50 15 50 15Z" fill="#22d68a"/>
+              <path d="M50 15C50 15 38 7 32 11C40 21 50 15 50 15Z" fill="#18b876"/>
+              <ellipse cx="36" cy="45" rx="10" ry="14" fill="rgba(255,255,255,0.2)"/>
               <defs>
-                <linearGradient id="tomatoGradIcon" x1="50" y1="16" x2="50" y2="96" gradientUnits="userSpaceOnUse">
+                <linearGradient id="tomatoGradIcon" x1="50" y1="15" x2="50" y2="95" gradientUnits="userSpaceOnUse">
                   <stop offset="0%" stop-color="#ff7055"/>
                   <stop offset="100%" stop-color="#e54433"/>
                 </linearGradient>
               </defs>
             </svg>
           </div>
+
           <div class="time-display" id="timeDisplay">25:00</div>
-          <div class="session-count" id="sessionCount">第 1 / 4 个番茄</div>
+          <div class="session-info">
+            <div class="session-count" id="sessionCount">第 <span class="num">1</span> / <span id="totalSessions">4</span> 个番茄</div>
+            <div class="session-count">今日目标: <span class="num" id="dailyGoalDisplay">8</span> 个</div>
+          </div>
         </div>
       </div>
     </div>
@@ -514,6 +900,12 @@
 
   <!-- 控制按钮 -->
   <div class="controls">
+    <button class="btn btn-icon" id="skipBtn" title="跳过">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="5 4 15 12 5 20 5 4"/>
+        <line x1="19" y1="5" x2="19" y2="19"/>
+      </svg>
+    </button>
     <button class="btn btn-primary" id="startBtn">开始专注</button>
     <button class="btn btn-secondary" id="resetBtn">重置</button>
   </div>
@@ -526,6 +918,22 @@
     <div class="session-dot" data-session="4"></div>
   </div>
 
+  <!-- 统计面板 -->
+  <div class="stats-panel">
+    <div class="stat-item">
+      <div class="stat-value" id="statToday">0</div>
+      <div class="stat-label">今日完成</div>
+    </div>
+    <div class="stat-item break">
+      <div class="stat-value" id="statGoal">8</div>
+      <div class="stat-label">今日目标</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="statStreak">0</div>
+      <div class="stat-label">连续天数</div>
+    </div>
+  </div>
+
   <!-- 快捷键提示 -->
   <div class="shortcuts">
     <div class="shortcut-item">
@@ -536,9 +944,53 @@
       <kbd>R</kbd>
       <span>重置</span>
     </div>
+    <div class="shortcut-item">
+      <kbd>S</kbd>
+      <span>跳过</span>
+    </div>
   </div>
 
   <script>
+    // 本地存储
+    const STORAGE_KEY = 'pomodoro_stats';
+
+    function loadStats() {
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (data) {
+        return JSON.parse(data);
+      }
+      return {
+        todayCompleted: 0,
+        totalCompleted: 0,
+        lastDate: new Date().toDateString(),
+        streak: 0
+      };
+    }
+
+    function saveStats(stats) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
+    }
+
+    function getStats() {
+      let stats = loadStats();
+      const today = new Date().toDateString();
+
+      if (stats.lastDate !== today) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (stats.lastDate === yesterday.toDateString()) {
+          stats.streak++;
+        } else if (stats.lastDate !== today) {
+          stats.streak = 1;
+        }
+        stats.todayCompleted = 0;
+        stats.lastDate = today;
+        saveStats(stats);
+      }
+
+      return stats;
+    }
+
     // 音频
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
@@ -561,30 +1013,46 @@
         oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime);
         oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15);
         oscillator.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.3);
-        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+        gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
         oscillator.start(audioCtx.currentTime);
-        oscillator.stop(audioCtx.currentTime + 0.6);
+        oscillator.stop(audioCtx.currentTime + 0.8);
       } else if (type === 'tick') {
         oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
         oscillator.start(audioCtx.currentTime);
         oscillator.stop(audioCtx.currentTime + 0.05);
       }
     }
 
-    // 常量
-    const WORK_TIME = 25 * 60;
-    const BREAK_TIME = 5 * 60;
-    const CIRCUMFERENCE = 2 * Math.PI * 140;
+    // 设置
+    let settings = {
+      workDuration: 25,
+      breakDuration: 5,
+      longBreakDuration: 15,
+      sessionsUntilLongBreak: 4,
+      dailyGoal: 8
+    };
+
+    function loadSettings() {
+      const saved = localStorage.getItem('pomodoro_settings');
+      if (saved) {
+        settings = { ...settings, ...JSON.parse(saved) };
+      }
+    }
+
+    function saveSettings() {
+      localStorage.setItem('pomodoro_settings', JSON.stringify(settings));
+    }
 
     // 状态
-    let timeLeft = WORK_TIME;
+    let timeLeft = settings.workDuration * 60;
     let isRunning = false;
     let isBreak = false;
     let currentSession = 0;
     let intervalId = null;
+    const CIRCUMFERENCE = 2 * Math.PI * 148;
 
     // DOM
     const timerContainer = document.getElementById('timerContainer');
@@ -592,15 +1060,43 @@
     const progressRing = document.getElementById('progressRing');
     const startBtn = document.getElementById('startBtn');
     const resetBtn = document.getElementById('resetBtn');
+    const skipBtn = document.getElementById('skipBtn');
     const modeBadge = document.getElementById('modeBadge');
     const modeLabel = document.getElementById('modeLabel');
     const sessionCount = document.getElementById('sessionCount');
+    const totalSessionsEl = document.getElementById('totalSessions');
     const sessionDots = document.querySelectorAll('.session-dot');
     const particlesContainer = document.getElementById('particles');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const settingsOverlay = document.getElementById('settingsOverlay');
+    const closeSettings = document.getElementById('closeSettings');
+    const statToday = document.getElementById('statToday');
+    const statGoal = document.getElementById('statGoal');
+    const statStreak = document.getElementById('statStreak');
+    const dailyGoalDisplay = document.getElementById('dailyGoalDisplay');
+    const todayCompletedEl = document.getElementById('todayCompleted');
+    const totalCompletedEl = document.getElementById('totalCompleted');
+    const resetStatsEl = document.getElementById('resetStats');
+
+    // 刻度
+    function createTicks() {
+      const ticksContainer = document.getElementById('ringTicks');
+      for (let i = 0; i < 60; i++) {
+        const tick = document.createElement('div');
+        tick.className = 'tick' + (i % 5 === 0 ? ' major' : '');
+        tick.style.transform = `rotate(${i * 6}deg)`;
+        ticksContainer.appendChild(tick);
+      }
+    }
 
     // 初始化
+    loadSettings();
+    createTicks();
     progressRing.style.strokeDasharray = CIRCUMFERENCE;
     progressRing.style.strokeDashoffset = 0;
+    updateDisplay();
+    updateStats();
 
     function formatTime(seconds) {
       const mins = Math.floor(seconds / 60);
@@ -608,7 +1104,7 @@
       return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 
-    function createParticles(count = 20) {
+    function createParticles(count = 25) {
       const colors = isBreak
         ? ['#22d68a', '#18b876', '#66e8a8']
         : ['#ff5533', '#ff7055', '#ff9977'];
@@ -622,9 +1118,11 @@
         particle.style.background = colors[Math.floor(Math.random() * colors.length)];
         particle.style.left = centerX + 'px';
         particle.style.top = centerY + 'px';
+        particle.style.width = (6 + Math.random() * 8) + 'px';
+        particle.style.height = particle.style.width;
 
         const angle = (Math.random() * 360) * (Math.PI / 180);
-        const distance = 100 + Math.random() * 150;
+        const distance = 80 + Math.random() * 150;
         const tx = Math.cos(angle) * distance;
         const ty = Math.sin(angle) * distance;
 
@@ -632,32 +1130,45 @@
         particle.style.setProperty('--ty', ty + 'px');
 
         particlesContainer.appendChild(particle);
-
-        setTimeout(() => particle.remove(), 1000);
+        setTimeout(() => particle.remove(), 1200);
       }
     }
 
     function updateDisplay() {
       timeDisplay.textContent = formatTime(timeLeft);
 
-      const total = isBreak ? BREAK_TIME : WORK_TIME;
+      const total = isBreak
+        ? (currentSession >= settings.sessionsUntilLongBreak ? settings.longBreakDuration : settings.breakDuration) * 60
+        : settings.workDuration * 60;
       const progress = (total - timeLeft) / total;
       const offset = CIRCUMFERENCE * (1 - progress);
       progressRing.style.strokeDashoffset = offset;
+
+      totalSessionsEl.textContent = settings.sessionsUntilLongBreak;
+      dailyGoalDisplay.textContent = settings.dailyGoal;
+      statGoal.textContent = settings.dailyGoal;
 
       if (isBreak) {
         progressRing.classList.add('break');
         timeDisplay.classList.add('break');
         modeBadge.classList.add('break');
         modeLabel.textContent = '休息时间';
-        sessionCount.textContent = '休息一下';
+        sessionCount.innerHTML = '休息一下';
       } else {
         progressRing.classList.remove('break');
         timeDisplay.classList.remove('break');
         modeBadge.classList.remove('break');
         modeLabel.textContent = '专注时间';
-        sessionCount.textContent = `第 ${currentSession + 1} / 4 个番茄`;
+        sessionCount.innerHTML = `第 <span class="num">${currentSession + 1}</span> / <span>${settings.sessionsUntilLongBreak}</span> 个番茄`;
       }
+    }
+
+    function updateStats() {
+      const stats = getStats();
+      statToday.textContent = stats.todayCompleted;
+      statStreak.textContent = stats.streak;
+      todayCompletedEl.textContent = stats.todayCompleted;
+      totalCompletedEl.textContent = stats.totalCompleted;
     }
 
     function startTimer() {
@@ -698,28 +1209,55 @@
       timerContainer.classList.remove('running');
       timerContainer.classList.add('celebrate');
       playSound('complete');
-      createParticles(30);
+      createParticles(35);
 
       setTimeout(() => {
         timerContainer.classList.remove('celebrate');
       }, 600);
 
       if (!isBreak) {
+        const stats = getStats();
+        stats.todayCompleted++;
+        stats.totalCompleted++;
+        if (stats.todayCompleted >= settings.dailyGoal) {
+          createParticles(50);
+        }
+        saveStats(stats);
+        updateStats();
+
         currentSession++;
-        if (currentSession >= 4) {
-          timeLeft = 15 * 60;
+        if (currentSession >= settings.sessionsUntilLongBreak) {
+          timeLeft = settings.longBreakDuration * 60;
           isBreak = true;
           currentSession = 0;
         } else {
-          timeLeft = BREAK_TIME;
+          timeLeft = settings.breakDuration * 60;
           isBreak = true;
         }
         updateSessionDots();
       } else {
-        timeLeft = WORK_TIME;
+        timeLeft = settings.workDuration * 60;
         isBreak = false;
       }
 
+      updateDisplay();
+    }
+
+    function skipSession() {
+      clearInterval(intervalId);
+      isRunning = false;
+
+      if (!isBreak) {
+        timeLeft = settings.breakDuration * 60;
+        isBreak = true;
+      } else {
+        timeLeft = settings.workDuration * 60;
+        isBreak = false;
+      }
+
+      startBtn.textContent = isBreak ? '开始专注' : '开始休息';
+      timerContainer.classList.remove('running');
+      timerContainer.classList.remove('break');
       updateDisplay();
     }
 
@@ -728,7 +1266,7 @@
       isRunning = false;
       isBreak = false;
       currentSession = 0;
-      timeLeft = WORK_TIME;
+      timeLeft = settings.workDuration * 60;
       startBtn.textContent = '开始专注';
       timerContainer.classList.remove('running');
       timerContainer.classList.remove('break');
@@ -742,22 +1280,80 @@
       });
     }
 
+    // 设置面板
+    function openSettings() {
+      settingsPanel.classList.add('open');
+      settingsOverlay.classList.add('open');
+      document.getElementById('workDuration').value = settings.workDuration;
+      document.getElementById('breakDuration').value = settings.breakDuration;
+      document.getElementById('longBreakDuration').value = settings.longBreakDuration;
+      document.getElementById('sessionsUntilLongBreak').value = settings.sessionsUntilLongBreak;
+      document.getElementById('dailyGoal').value = settings.dailyGoal;
+    }
+
+    function closeSettingsPanel() {
+      settingsPanel.classList.remove('open');
+      settingsOverlay.classList.remove('open');
+    }
+
     // 事件
     startBtn.addEventListener('click', startTimer);
     resetBtn.addEventListener('click', resetTimer);
+    skipBtn.addEventListener('click', skipSession);
+    settingsBtn.addEventListener('click', openSettings);
+    closeSettings.addEventListener('click', closeSettingsPanel);
+    settingsOverlay.addEventListener('click', closeSettingsPanel);
+
+    // 设置变更
+    document.getElementById('workDuration').addEventListener('change', (e) => {
+      settings.workDuration = parseInt(e.target.value) || 25;
+      saveSettings();
+      if (!isRunning && !isBreak) {
+        timeLeft = settings.workDuration * 60;
+        updateDisplay();
+      }
+    });
+
+    document.getElementById('breakDuration').addEventListener('change', (e) => {
+      settings.breakDuration = parseInt(e.target.value) || 5;
+      saveSettings();
+    });
+
+    document.getElementById('longBreakDuration').addEventListener('change', (e) => {
+      settings.longBreakDuration = parseInt(e.target.value) || 15;
+      saveSettings();
+    });
+
+    document.getElementById('sessionsUntilLongBreak').addEventListener('change', (e) => {
+      settings.sessionsUntilLongBreak = parseInt(e.target.value) || 4;
+      saveSettings();
+      updateDisplay();
+    });
+
+    document.getElementById('dailyGoal').addEventListener('change', (e) => {
+      settings.dailyGoal = parseInt(e.target.value) || 8;
+      saveSettings();
+      updateStats();
+    });
+
+    resetStatsEl.addEventListener('click', () => {
+      if (confirm('确定要清除所有数据吗？')) {
+        localStorage.removeItem(STORAGE_KEY);
+        updateStats();
+      }
+    });
 
     // 键盘快捷键
     document.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') {
+      if (e.code === 'Space' && e.target === document.body) {
         e.preventDefault();
         startTimer();
       } else if (e.code === 'KeyR') {
         resetTimer();
+      } else if (e.code === 'KeyS') {
+        skipSession();
       }
     });
-
-    // 初始化
-    updateDisplay();
   </script>
 </body>
 </html>
