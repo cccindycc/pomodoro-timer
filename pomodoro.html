@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>番茄钟 Pomodoro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0d0d0d;
+      --bg-secondary: #1a1a1a;
+      --tomato: #ff6342;
+      --tomato-dark: #cc4f35;
+      --tomato-glow: rgba(255, 99, 66, 0.4);
+      --text-primary: #ffffff;
+      --text-secondary: #888888;
+      --break-color: #4ade80;
+      --break-glow: rgba(74, 222, 128, 0.4);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-primary);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 背景纹理 */
+    body::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 80%, rgba(255, 99, 66, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 99, 66, 0.03) 0%, transparent 50%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    /* 标题 */
+    .header {
+      text-align: center;
+      margin-bottom: 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .title {
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .session-label {
+      font-size: 13px;
+      color: var(--tomato);
+      letter-spacing: 2px;
+      opacity: 0.9;
+    }
+
+    /* 计时器容器 */
+    .timer-container {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 进度环 */
+    .progress-ring {
+      position: relative;
+      width: 340px;
+      height: 340px;
+      transform: rotate(-90deg);
+    }
+
+    .progress-ring__bg {
+      fill: none;
+      stroke: var(--bg-secondary);
+      stroke-width: 8;
+    }
+
+    .progress-ring__fill {
+      fill: none;
+      stroke: var(--tomato);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 1007;
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
+      filter: drop-shadow(0 0 20px var(--tomato-glow));
+    }
+
+    .progress-ring__fill.break {
+      stroke: var(--break-color);
+      filter: drop-shadow(0 0 20px var(--break-glow));
+    }
+
+    /* 中心内容 */
+    .timer-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .time-display {
+      font-family: 'Space Mono', monospace;
+      font-size: 72px;
+      font-weight: 700;
+      letter-spacing: -2px;
+      line-height: 1;
+      margin-bottom: 8px;
+      transition: color 0.3s ease;
+    }
+
+    .time-display.break {
+      color: var(--break-color);
+    }
+
+    .mode-indicator {
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    /* 番茄图标 */
+    .tomato-icon {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 20px;
+      opacity: 0.9;
+    }
+
+    .tomato-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 控制按钮 */
+    .controls {
+      display: flex;
+      gap: 16px;
+      margin-top: 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn {
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      padding: 14px 36px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary {
+      background: var(--tomato);
+      color: white;
+      box-shadow: 0 4px 24px var(--tomato-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px var(--tomato-glow);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid #333;
+    }
+
+    .btn-secondary:hover {
+      background: #252525;
+      border-color: #444;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* 计数指示器 */
+    .session-counter {
+      display: flex;
+      gap: 8px;
+      margin-top: 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .session-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      border: 1px solid #333;
+      transition: all 0.3s ease;
+    }
+
+    .session-dot.completed {
+      background: var(--tomato);
+      border-color: var(--tomato);
+      box-shadow: 0 0 12px var(--tomato-glow);
+    }
+
+    /* 快捷键提示 */
+    .shortcuts {
+      position: fixed;
+      bottom: 30px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      letter-spacing: 1px;
+      opacity: 0.6;
+    }
+
+    .shortcuts kbd {
+      background: var(--bg-secondary);
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin: 0 4px;
+      border: 1px solid #333;
+    }
+
+    /* 通知动画 */
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    @keyframes glow-pulse {
+      0%, 100% { filter: drop-shadow(0 0 20px var(--tomato-glow)); }
+      50% { filter: drop-shadow(0 0 40px var(--tomato-glow)); }
+    }
+
+    .timer-container.running .progress-ring__fill {
+      animation: glow-pulse 2s ease-in-out infinite;
+    }
+
+    /* 完成时的庆祝动画 */
+    @keyframes celebrate {
+      0% { transform: scale(1); }
+      10% { transform: scale(1.05); }
+      20% { transform: scale(1); }
+      30% { transform: scale(1.03); }
+      40% { transform: scale(1); }
+    }
+
+    .timer-container.celebrate {
+      animation: celebrate 0.6s ease;
+    }
+
+    /* 最小化时聚焦效果 */
+    .timer-container:not(.running) .time-display {
+      opacity: 0.9;
+    }
+
+    .timer-container.running .time-display {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">Pomodoro Timer</div>
+    <div class="session-label" id="sessionLabel">专注时间</div>
+  </div>
+
+  <div class="timer-container" id="timerContainer">
+    <svg class="progress-ring" viewBox="0 0 340 340">
+      <circle class="progress-ring__bg" cx="170" cy="170" r="160"/>
+      <circle class="progress-ring__fill" id="progressRing" cx="170" cy="170" r="160"/>
+    </svg>
+
+    <div class="timer-center">
+      <div class="tomato-icon">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="50" cy="58" rx="40" ry="38" fill="#ff6342"/>
+          <ellipse cx="50" cy="58" rx="40" ry="38" fill="url(#tomatoGrad)"/>
+          <path d="M50 20C50 20 45 8 50 5C55 8 50 20 50 20Z" fill="#4ade80"/>
+          <path d="M50 20C50 20 40 12 35 15C40 22 50 20 50 20Z" fill="#22c55e"/>
+          <ellipse cx="38" cy="48" rx="8" ry="12" fill="rgba(255,255,255,0.2)"/>
+          <defs>
+            <linearGradient id="tomatoGrad" x1="50" y1="20" x2="50" y2="96" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#ff7b5c"/>
+              <stop offset="100%" stop-color="#e5532f"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="time-display" id="timeDisplay">25:00</div>
+      <div class="mode-indicator" id="modeIndicator">专注中</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-primary" id="startBtn">开始</button>
+    <button class="btn btn-secondary" id="resetBtn">重置</button>
+  </div>
+
+  <div class="session-counter" id="sessionCounter">
+    <div class="session-dot" data-session="1"></div>
+    <div class="session-dot" data-session="2"></div>
+    <div class="session-dot" data-session="3"></div>
+    <div class="session-dot" data-session="4"></div>
+  </div>
+
+  <div class="shortcuts">
+    <kbd>空格</kbd> 开始/暂停
+    <kbd>R</kbd> 重置
+  </div>
+
+  <script>
+    // 音频生成
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+      }
+    }
+
+    function playSound(type) {
+      initAudio();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      if (type === 'complete') {
+        // 完成的提示音 - 上升音阶
+        oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+        oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15); // E5
+        oscillator.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.3); // G5
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + 0.6);
+      } else if (type === 'tick') {
+        // 滴答声
+        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + 0.05);
+      }
+    }
+
+    // 状态
+    const WORK_TIME = 25 * 60;
+    const BREAK_TIME = 5 * 60;
+    const CIRCUMFERENCE = 2 * Math.PI * 160;
+
+    let timeLeft = WORK_TIME;
+    let isRunning = false;
+    let isBreak = false;
+    let currentSession = 0;
+    let intervalId = null;
+
+    // DOM
+    const timerContainer = document.getElementById('timerContainer');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const progressRing = document.getElementById('progressRing');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const sessionLabel = document.getElementById('sessionLabel');
+    const modeIndicator = document.getElementById('modeIndicator');
+    const sessionDots = document.querySelectorAll('.session-dot');
+
+    // 初始化进度环
+    progressRing.style.strokeDasharray = CIRCUMFERENCE;
+    progressRing.style.strokeDashoffset = 0;
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateDisplay() {
+      timeDisplay.textContent = formatTime(timeLeft);
+
+      // 更新进度环
+      const total = isBreak ? BREAK_TIME : WORK_TIME;
+      const progress = (total - timeLeft) / total;
+      const offset = CIRCUMFERENCE * (1 - progress);
+      progressRing.style.strokeDashoffset = offset;
+
+      // 更新样式
+      if (isBreak) {
+        progressRing.classList.add('break');
+        timeDisplay.classList.add('break');
+        sessionLabel.textContent = '休息时间';
+        modeIndicator.textContent = '休息中';
+      } else {
+        progressRing.classList.remove('break');
+        timeDisplay.classList.remove('break');
+        sessionLabel.textContent = '专注时间';
+        modeIndicator.textContent = '专注中';
+      }
+    }
+
+    function startTimer() {
+      if (isRunning) {
+        // 暂停
+        isRunning = false;
+        clearInterval(intervalId);
+        startBtn.textContent = '继续';
+        timerContainer.classList.remove('running');
+      } else {
+        // 开始/继续
+        isRunning = true;
+        startBtn.textContent = '暂停';
+        timerContainer.classList.add('running');
+
+        intervalId = setInterval(() => {
+          timeLeft--;
+
+          // 最后10秒滴答声
+          if (timeLeft <= 10 && timeLeft > 0) {
+            playSound('tick');
+          }
+
+          if (timeLeft <= 0) {
+            completeSession();
+          }
+
+          updateDisplay();
+        }, 1000);
+      }
+    }
+
+    function completeSession() {
+      clearInterval(intervalId);
+      isRunning = false;
+      startBtn.textContent = '开始';
+      timerContainer.classList.remove('running');
+      timerContainer.classList.add('celebrate');
+      playSound('complete');
+
+      setTimeout(() => {
+        timerContainer.classList.remove('celebrate');
+      }, 600);
+
+      if (!isBreak) {
+        // 完成一个专注周期
+        currentSession++;
+        if (currentSession >= 4) {
+          // 长休息
+          timeLeft = 15 * 60;
+          isBreak = true;
+          currentSession = 0;
+        } else {
+          timeLeft = BREAK_TIME;
+          isBreak = true;
+        }
+        updateSessionDots();
+      } else {
+        // 完成休息，开始新周期
+        timeLeft = WORK_TIME;
+        isBreak = false;
+      }
+
+      updateDisplay();
+    }
+
+    function resetTimer() {
+      clearInterval(intervalId);
+      isRunning = false;
+      isBreak = false;
+      currentSession = 0;
+      timeLeft = WORK_TIME;
+      startBtn.textContent = '开始';
+      timerContainer.classList.remove('running');
+      updateDisplay();
+      updateSessionDots();
+    }
+
+    function updateSessionDots() {
+      sessionDots.forEach((dot, index) => {
+        if (index < currentSession) {
+          dot.classList.add('completed');
+        } else {
+          dot.classList.remove('completed');
+        }
+      });
+    }
+
+    // 事件
+    startBtn.addEventListener('click', startTimer);
+    resetBtn.addEventListener('click', resetTimer);
+
+    // 键盘快捷键
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && e.target === document.body) {
+        e.preventDefault();
+        startTimer();
+      } else if (e.code === 'KeyR') {
+        resetTimer();
+      }
+    });
+
+    // 初始化
+    updateDisplay();
+  </script>
+</body>
+</html>

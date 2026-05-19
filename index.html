@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>番茄钟</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #08080a;
+      --bg-secondary: #111114;
+      --bg-card: #18181c;
+      --tomato: #ff5533;
+      --tomato-light: #ff7055;
+      --tomato-dark: #cc3322;
+      --tomato-glow: rgba(255, 85, 51, 0.5);
+      --break-color: #22d68a;
+      --break-glow: rgba(34, 214, 138, 0.5);
+      --text-primary: #ffffff;
+      --text-secondary: #6b6b70;
+      --text-tertiary: #3a3a40;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-primary);
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* 背景效果 */
+    .bg-effects {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .bg-gradient {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.15;
+      transition: opacity 0.5s ease;
+    }
+
+    .bg-gradient-1 {
+      background: var(--tomato);
+      top: -200px;
+      left: -100px;
+    }
+
+    .bg-gradient-2 {
+      background: var(--tomato-dark);
+      bottom: -200px;
+      right: -100px;
+      opacity: 0.1;
+    }
+
+    .bg-noise {
+      position: absolute;
+      inset: 0;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+
+    .timer-container.running .bg-gradient-1 {
+      opacity: 0.25;
+      animation: bg-pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes bg-pulse {
+      0%, 100% { transform: scale(1) translate(0, 0); }
+      50% { transform: scale(1.1) translate(-10px, -10px); }
+    }
+
+    /* 顶部标签 */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .mode-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      background: var(--bg-card);
+      border-radius: 50px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      color: var(--text-secondary);
+      transition: all 0.4s ease;
+    }
+
+    .mode-badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--tomato);
+      box-shadow: 0 0 12px var(--tomato-glow);
+      transition: all 0.4s ease;
+    }
+
+    .mode-badge.break .dot {
+      background: var(--break-color);
+      box-shadow: 0 0 12px var(--break-glow);
+    }
+
+    .mode-badge .label {
+      transition: color 0.4s ease;
+    }
+
+    .mode-badge.break .label {
+      color: var(--break-color);
+    }
+
+    /* 计时器主体 */
+    .timer-wrapper {
+      position: relative;
+      z-index: 10;
+    }
+
+    .timer-ring-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+    }
+
+    /* 外圈装饰 */
+    .ring-outer {
+      position: absolute;
+      inset: -20px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      transition: all 0.4s ease;
+    }
+
+    .timer-container.running .ring-outer {
+      border-color: rgba(255, 85, 51, 0.1);
+      animation: ring-rotate 20s linear infinite;
+    }
+
+    .timer-container.running.break .ring-outer {
+      border-color: rgba(34, 214, 138, 0.1);
+    }
+
+    @keyframes ring-rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .ring-outer::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      background: var(--tomato);
+      border-radius: 50%;
+      opacity: 0.5;
+    }
+
+    /* 进度环 */
+    .progress-ring {
+      transform: rotate(-90deg);
+      filter: drop-shadow(0 0 30px var(--tomato-glow));
+    }
+
+    .progress-ring__bg {
+      fill: none;
+      stroke: var(--bg-secondary);
+      stroke-width: 4;
+    }
+
+    .progress-ring__fill {
+      fill: none;
+      stroke: url(#tomatoGradient);
+      stroke-width: 6;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear, stroke 0.4s ease;
+    }
+
+    .progress-ring__fill.break {
+      stroke: url(#breakGradient);
+      filter: drop-shadow(0 0 30px var(--break-glow));
+    }
+
+    /* 中心内容 */
+    .timer-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .time-display {
+      font-family: 'Orbitron', 'SF Mono', monospace;
+      font-size: 52px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      transition: all 0.4s ease;
+    }
+
+    .time-display.break {
+      background: linear-gradient(135deg, var(--break-color) 0%, #66e8a8 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+
+    .session-count {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 12px;
+      letter-spacing: 1px;
+    }
+
+    /* 番茄图标 */
+    .tomato-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 20px;
+      opacity: 0.9;
+      transition: all 0.4s ease;
+    }
+
+    .tomato-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .timer-container.running .tomato-icon {
+      animation: tomato-bounce 1s ease-in-out infinite;
+    }
+
+    .timer-container.break .tomato-icon svg ellipse {
+      fill: var(--break-color);
+    }
+
+    .timer-container.break .tomato-icon svg path {
+      fill: #1a9d5c;
+    }
+
+    @keyframes tomato-bounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-3px) scale(1.02); }
+    }
+
+    /* 控制按钮 */
+    .controls {
+      display: flex;
+      gap: 16px;
+      margin-top: 50px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .btn {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 14px 40px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .btn:hover::before {
+      opacity: 1;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--tomato) 0%, var(--tomato-dark) 100%);
+      color: white;
+      box-shadow: 0 8px 32px var(--tomato-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px var(--tomato-glow);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-secondary:hover {
+      background: #222228;
+      border-color: rgba(255, 255, 255, 0.12);
+      transform: translateY(-2px);
+    }
+
+    /* 周期指示器 */
+    .session-counter {
+      display: flex;
+      gap: 12px;
+      margin-top: 40px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .session-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--text-tertiary);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .session-dot.completed {
+      background: linear-gradient(135deg, var(--tomato) 0%, var(--tomato-dark) 100%);
+      border-color: var(--tomato);
+      box-shadow: 0 0 16px var(--tomato-glow);
+      transform: scale(1.1);
+    }
+
+    /* 完成庆祝动画 */
+    @keyframes celebrate {
+      0% { transform: translate(-50%, -50%) scale(1); }
+      25% { transform: translate(-50%, -50%) scale(1.08); }
+      50% { transform: translate(-50%, -50%) scale(0.95); }
+      75% { transform: translate(-50%, -50%) scale(1.03); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .timer-container.celebrate .timer-center {
+      animation: celebrate 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* 粒子效果 */
+    .particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: particle-float 1s ease-out forwards;
+    }
+
+    @keyframes particle-float {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--tx), var(--ty)) scale(0);
+      }
+    }
+
+    /* 快捷键提示 */
+    .shortcuts {
+      position: fixed;
+      bottom: 24px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      letter-spacing: 0.5px;
+      display: flex;
+      gap: 20px;
+    }
+
+    .shortcut-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .shortcuts kbd {
+      background: var(--bg-card);
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      font-family: inherit;
+      font-size: 10px;
+    }
+
+    /* 呼吸动画 */
+    @keyframes breathe {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    .timer-container:not(.running) .timer-ring-container {
+      animation: breathe 3s ease-in-out infinite;
+    }
+
+    /* SVG 渐变定义 */
+    .svg-defs {
+      position: absolute;
+      width: 0;
+      height: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- SVG 渐变定义 -->
+  <svg class="svg-defs">
+    <defs>
+      <linearGradient id="tomatoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ff7055"/>
+        <stop offset="100%" stop-color="#ff3322"/>
+      </linearGradient>
+      <linearGradient id="breakGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#22d68a"/>
+        <stop offset="100%" stop-color="#18b876"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <!-- 背景效果 -->
+  <div class="bg-effects">
+    <div class="bg-gradient bg-gradient-1"></div>
+    <div class="bg-gradient bg-gradient-2"></div>
+    <div class="bg-noise"></div>
+  </div>
+
+  <!-- 粒子容器 -->
+  <div class="particles" id="particles"></div>
+
+  <!-- 顶部标签 -->
+  <div class="header">
+    <div class="mode-badge" id="modeBadge">
+      <span class="dot"></span>
+      <span class="label" id="modeLabel">专注时间</span>
+    </div>
+  </div>
+
+  <!-- 计时器 -->
+  <div class="timer-wrapper">
+    <div class="timer-container" id="timerContainer">
+      <div class="timer-ring-container">
+        <div class="ring-outer"></div>
+
+        <svg class="progress-ring" width="300" height="300" viewBox="0 0 300 300">
+          <circle class="progress-ring__bg" cx="150" cy="150" r="140"/>
+          <circle class="progress-ring__fill" id="progressRing" cx="150" cy="150" r="140"/>
+        </svg>
+
+        <div class="timer-center">
+          <div class="tomato-icon">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="50" cy="56" rx="42" ry="40" fill="#ff5533"/>
+              <ellipse cx="50" cy="56" rx="42" ry="40" fill="url(#tomatoGradIcon)"/>
+              <path d="M50 16C50 16 44 4 50 1C56 4 50 16 50 16Z" fill="#22d68a"/>
+              <path d="M50 16C50 16 38 8 32 12C40 22 50 16 50 16Z" fill="#18b876"/>
+              <ellipse cx="36" cy="46" rx="10" ry="14" fill="rgba(255,255,255,0.2)"/>
+              <defs>
+                <linearGradient id="tomatoGradIcon" x1="50" y1="16" x2="50" y2="96" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#ff7055"/>
+                  <stop offset="100%" stop-color="#e54433"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="time-display" id="timeDisplay">25:00</div>
+          <div class="session-count" id="sessionCount">第 1 / 4 个番茄</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 控制按钮 -->
+  <div class="controls">
+    <button class="btn btn-primary" id="startBtn">开始专注</button>
+    <button class="btn btn-secondary" id="resetBtn">重置</button>
+  </div>
+
+  <!-- 周期指示器 -->
+  <div class="session-counter" id="sessionCounter">
+    <div class="session-dot" data-session="1"></div>
+    <div class="session-dot" data-session="2"></div>
+    <div class="session-dot" data-session="3"></div>
+    <div class="session-dot" data-session="4"></div>
+  </div>
+
+  <!-- 快捷键提示 -->
+  <div class="shortcuts">
+    <div class="shortcut-item">
+      <kbd>空格</kbd>
+      <span>开始/暂停</span>
+    </div>
+    <div class="shortcut-item">
+      <kbd>R</kbd>
+      <span>重置</span>
+    </div>
+  </div>
+
+  <script>
+    // 音频
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+      }
+    }
+
+    function playSound(type) {
+      initAudio();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      if (type === 'complete') {
+        oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+        oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15);
+        oscillator.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.3);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + 0.6);
+      } else if (type === 'tick') {
+        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + 0.05);
+      }
+    }
+
+    // 常量
+    const WORK_TIME = 25 * 60;
+    const BREAK_TIME = 5 * 60;
+    const CIRCUMFERENCE = 2 * Math.PI * 140;
+
+    // 状态
+    let timeLeft = WORK_TIME;
+    let isRunning = false;
+    let isBreak = false;
+    let currentSession = 0;
+    let intervalId = null;
+
+    // DOM
+    const timerContainer = document.getElementById('timerContainer');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const progressRing = document.getElementById('progressRing');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const modeBadge = document.getElementById('modeBadge');
+    const modeLabel = document.getElementById('modeLabel');
+    const sessionCount = document.getElementById('sessionCount');
+    const sessionDots = document.querySelectorAll('.session-dot');
+    const particlesContainer = document.getElementById('particles');
+
+    // 初始化
+    progressRing.style.strokeDasharray = CIRCUMFERENCE;
+    progressRing.style.strokeDashoffset = 0;
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function createParticles(count = 20) {
+      const colors = isBreak
+        ? ['#22d68a', '#18b876', '#66e8a8']
+        : ['#ff5533', '#ff7055', '#ff9977'];
+
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+
+      for (let i = 0; i < count; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.left = centerX + 'px';
+        particle.style.top = centerY + 'px';
+
+        const angle = (Math.random() * 360) * (Math.PI / 180);
+        const distance = 100 + Math.random() * 150;
+        const tx = Math.cos(angle) * distance;
+        const ty = Math.sin(angle) * distance;
+
+        particle.style.setProperty('--tx', tx + 'px');
+        particle.style.setProperty('--ty', ty + 'px');
+
+        particlesContainer.appendChild(particle);
+
+        setTimeout(() => particle.remove(), 1000);
+      }
+    }
+
+    function updateDisplay() {
+      timeDisplay.textContent = formatTime(timeLeft);
+
+      const total = isBreak ? BREAK_TIME : WORK_TIME;
+      const progress = (total - timeLeft) / total;
+      const offset = CIRCUMFERENCE * (1 - progress);
+      progressRing.style.strokeDashoffset = offset;
+
+      if (isBreak) {
+        progressRing.classList.add('break');
+        timeDisplay.classList.add('break');
+        modeBadge.classList.add('break');
+        modeLabel.textContent = '休息时间';
+        sessionCount.textContent = '休息一下';
+      } else {
+        progressRing.classList.remove('break');
+        timeDisplay.classList.remove('break');
+        modeBadge.classList.remove('break');
+        modeLabel.textContent = '专注时间';
+        sessionCount.textContent = `第 ${currentSession + 1} / 4 个番茄`;
+      }
+    }
+
+    function startTimer() {
+      if (isRunning) {
+        isRunning = false;
+        clearInterval(intervalId);
+        startBtn.textContent = isBreak ? '继续休息' : '继续专注';
+        timerContainer.classList.remove('running');
+        timerContainer.classList.remove('break');
+      } else {
+        isRunning = true;
+        startBtn.textContent = '暂停';
+        timerContainer.classList.add('running');
+        if (isBreak) {
+          timerContainer.classList.add('break');
+        }
+
+        intervalId = setInterval(() => {
+          timeLeft--;
+
+          if (timeLeft <= 10 && timeLeft > 0) {
+            playSound('tick');
+          }
+
+          if (timeLeft <= 0) {
+            completeSession();
+          }
+
+          updateDisplay();
+        }, 1000);
+      }
+    }
+
+    function completeSession() {
+      clearInterval(intervalId);
+      isRunning = false;
+      startBtn.textContent = isBreak ? '开始专注' : '开始休息';
+      timerContainer.classList.remove('running');
+      timerContainer.classList.add('celebrate');
+      playSound('complete');
+      createParticles(30);
+
+      setTimeout(() => {
+        timerContainer.classList.remove('celebrate');
+      }, 600);
+
+      if (!isBreak) {
+        currentSession++;
+        if (currentSession >= 4) {
+          timeLeft = 15 * 60;
+          isBreak = true;
+          currentSession = 0;
+        } else {
+          timeLeft = BREAK_TIME;
+          isBreak = true;
+        }
+        updateSessionDots();
+      } else {
+        timeLeft = WORK_TIME;
+        isBreak = false;
+      }
+
+      updateDisplay();
+    }
+
+    function resetTimer() {
+      clearInterval(intervalId);
+      isRunning = false;
+      isBreak = false;
+      currentSession = 0;
+      timeLeft = WORK_TIME;
+      startBtn.textContent = '开始专注';
+      timerContainer.classList.remove('running');
+      timerContainer.classList.remove('break');
+      updateDisplay();
+      updateSessionDots();
+    }
+
+    function updateSessionDots() {
+      sessionDots.forEach((dot, index) => {
+        dot.classList.toggle('completed', index < currentSession);
+      });
+    }
+
+    // 事件
+    startBtn.addEventListener('click', startTimer);
+    resetBtn.addEventListener('click', resetTimer);
+
+    // 键盘快捷键
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        startTimer();
+      } else if (e.code === 'KeyR') {
+        resetTimer();
+      }
+    });
+
+    // 初始化
+    updateDisplay();
+  </script>
+</body>
+</html>
